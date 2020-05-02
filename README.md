@@ -23,7 +23,9 @@ Then you can access the code with `http://localhost:8080`. It contains the follo
   
 ## The comparison
 
-The main comparison can be seen in the following classes:
+The main comparison can be seen in the different functions of the following classes. 
+The idea is that by looking at how the functions are implemented it would be possible to understand the different
+programming style/techniques.
 
 - [ParallelComparisonController](src/main/kotlin/org/kotlinlang/example/ParallelComparisonController.kt)
 - [SequentialComparisonController](src/main/kotlin/org/kotlinlang/example/SequentialComparisonController.kt)
