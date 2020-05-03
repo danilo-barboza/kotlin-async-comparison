@@ -13,15 +13,15 @@ private val objectMapper = ObjectMapper()
 
 //shared helper methods
 fun logDelayedRequest(fullName: String) {
-  logger.info("[ $fullName ]: processing delayed request")
+	logger.info("[ $fullName ]: processing delayed request")
 }
 
 fun parseDelayedResponse(delayedResponseBody: String): String {
-  return objectMapper.readTree(delayedResponseBody).get("data").asText()
+	return objectMapper.readTree(delayedResponseBody).get("data").asText()
 }
 
 fun main(args: Array<String>) {
-  runApplication<Application>(*args)
+	runApplication<Application>(*args)
 }
 
 @SpringBootApplication

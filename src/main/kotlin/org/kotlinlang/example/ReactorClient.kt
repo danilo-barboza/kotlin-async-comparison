@@ -8,26 +8,26 @@ import reactor.core.publisher.Mono
 
 @Service
 class ReactorClient {
-  val webClient: WebClient = WebClient.create("https://httpbin.org/")
+	val webClient: WebClient = WebClient.create("https://httpbin.org/")
 
-  fun getUserAgent(): Mono<String> {
-	return webClient
-	  .get()
-	  .uri("user-agent")
-	  .retrieve()
-	  .bodyToMono()
-  }
+	fun getUserAgent(): Mono<String> {
+		return webClient
+			.get()
+			.uri("user-agent")
+			.retrieve()
+			.bodyToMono()
+	}
 
-  fun processUserAgent(body: String, name: String): Mono<String> {
-	val fullName = "reactorWebClient($name)"
-	logDelayedRequest(fullName)
+	fun processUserAgent(body: String, name: String): Mono<String> {
+		val fullName = "reactorWebClient($name)"
+		logDelayedRequest(fullName)
 
-	return webClient.post()
-	  .uri("delay/1")
-	  .body(BodyInserters.fromValue(body))
-	  .retrieve()
-	  .bodyToMono<String>()
-	  .map { "$fullName result: ${parseDelayedResponse(it)}" }
-  }
+		return webClient.post()
+			.uri("delay/1")
+			.body(BodyInserters.fromValue(body))
+			.retrieve()
+			.bodyToMono<String>()
+			.map { "$fullName result: ${parseDelayedResponse(it)}" }
+	}
 }
 

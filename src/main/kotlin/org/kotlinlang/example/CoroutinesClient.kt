@@ -7,20 +7,20 @@ import org.springframework.stereotype.Service
 
 @Service
 class CoroutinesClient {
-  val ktorHttpClient: HttpClient = HttpClient()
+	val ktorHttpClient: HttpClient = HttpClient()
 
-  suspend fun getUserAgent(): String {
-	return ktorHttpClient.get("https://httpbin.org/user-agent")
-  }
-
-  suspend fun processUserAgent(userAgentResponse: String, name: String): String {
-	val fullName = "coroutine-ktor-client($name)"
-	logDelayedRequest(fullName)
-
-	val delayResponse = ktorHttpClient.post<String>("https://httpbin.org/delay/1") {
-	  body = userAgentResponse
+	suspend fun getUserAgent(): String {
+		return ktorHttpClient.get("https://httpbin.org/user-agent")
 	}
 
-	return "$fullName result: ${parseDelayedResponse(delayResponse)}"
-  }
+	suspend fun processUserAgent(userAgentResponse: String, name: String): String {
+		val fullName = "coroutine-ktor-client($name)"
+		logDelayedRequest(fullName)
+
+		val delayResponse = ktorHttpClient.post<String>("https://httpbin.org/delay/1") {
+			body = userAgentResponse
+		}
+
+		return "$fullName result: ${parseDelayedResponse(delayResponse)}"
+	}
 }
