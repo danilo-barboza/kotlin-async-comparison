@@ -21,36 +21,36 @@ class ParallelComparisonController(
 	@GetMapping("/completable-future")
 	fun completableFuture(): CompletableFuture<CombinedResult> {
 		logger.info("/parallel/completable-future endpoint called")
-		val userAgentFuture: CompletableFuture<String> = completableFutureClient.getUserAgent()
-		return userAgentFuture
-			.thenCompose { userAgent ->
-				val processOne: CompletableFuture<String> = completableFutureClient.processUserAgent(userAgent, "one")
-				val processTwo: CompletableFuture<String> = completableFutureClient.processUserAgent(userAgent, "two")
-				processOne.thenCombine(processTwo) { r1, r2 -> CombinedResult(r1, r2) }
+		val orderIdFuture: CompletableFuture<String> = completableFutureClient.fetchMostRecentOrderId()
+		return orderIdFuture
+			.thenCompose { orderId ->
+				val deliveryCostFuture: CompletableFuture<String> = completableFutureClient.fetchDeliveryCost(orderId)
+				val stockInformationFuture: CompletableFuture<String> = completableFutureClient.fetchStockInformation(orderId)
+				deliveryCostFuture.thenCombine(stockInformationFuture) { r1, r2 -> CombinedResult(r1, r2) }
 			}
 	}
 
 	@GetMapping("/reactor")
 	fun reactor(): Mono<CombinedResult> {
 		logger.info("/parallel/reactor endpoint called")
-		val userAgentFuture: Mono<String> = reactorClient.getUserAgent()
-		return userAgentFuture
-			.flatMap { userAgent ->
-				val processOne: Mono<String> = reactorClient.processUserAgent(userAgent, "one")
-				val processTwo: Mono<String> = reactorClient.processUserAgent(userAgent, "two")
-				processOne.zipWith(processTwo) { r1, r2 -> CombinedResult(r1, r2) }
+		val orderIdFuture: Mono<String> = reactorClient.fetchMostRecentOrderId()
+		return orderIdFuture
+			.flatMap { orderId ->
+				val deliveryCostFuture: Mono<String> = reactorClient.fetchDeliveryCost(orderId)
+				val stockInformationFuture: Mono<String> = reactorClient.fetchStockInformation(orderId)
+				deliveryCostFuture.zipWith(stockInformationFuture) { r1, r2 -> CombinedResult(r1, r2) }
 			}
 	}
 
 	@GetMapping("/coroutines")
 	suspend fun coroutines(): CombinedResult = coroutineScope {
 		logger.info("/parallel/coroutines endpoint called")
-		val userAgent: String = coroutinesClient.getUserAgent()
+		val orderId: String = coroutinesClient.fetchMostRecentOrderId()
 
-		val processOne: Deferred<String> = async { coroutinesClient.processUserAgent(userAgent, "one") }
-		val processTwo: Deferred<String> = async { coroutinesClient.processUserAgent(userAgent, "two") }
+		val deliveryCostFuture: Deferred<String> = async { coroutinesClient.fetchDeliveryCost(orderId) }
+		val stockInformationFuture: Deferred<String> = async { coroutinesClient.fetchStockInformation(orderId) }
 
-		CombinedResult(processOne.await(), processTwo.await())
+		CombinedResult(deliveryCostFuture.await(), stockInformationFuture.await())
 	}
 
 }

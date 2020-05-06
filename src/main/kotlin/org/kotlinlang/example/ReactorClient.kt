@@ -10,24 +10,33 @@ import reactor.core.publisher.Mono
 class ReactorClient {
 	val webClient: WebClient = WebClient.create("https://httpbin.org/")
 
-	fun getUserAgent(): Mono<String> {
+	fun fetchMostRecentOrderId(): Mono<String> {
 		return webClient
 			.get()
-			.uri("user-agent")
+			.uri("uuid")
 			.retrieve()
-			.bodyToMono()
+			.bodyToMono<String>()
+			.map { parseUUIDResponse(it) }
 	}
 
-	fun processUserAgent(body: String, name: String): Mono<String> {
-		val fullName = "reactorWebClient($name)"
+	fun fetchDeliveryCost(orderId: String): Mono<String> {
+		return fetchDelayedData(orderId, "Delivery cost")
+	}
+
+	fun fetchStockInformation(orderId: String): Mono<String> {
+		return fetchDelayedData(orderId, "Stock")
+	}
+
+	private fun fetchDelayedData(orderId: String, operation: String): Mono<String> {
+		val fullName = "reactorWebClient($operation)"
 		logDelayedRequest(fullName)
 
 		return webClient.post()
 			.uri("delay/1")
-			.body(BodyInserters.fromValue(body))
+			.body(BodyInserters.fromValue(delayedOperationRequest(operation, orderId)))
 			.retrieve()
 			.bodyToMono<String>()
-			.map { "$fullName result: ${parseDelayedResponse(it)}" }
+			.map { parseDelayedResponse(it) }
 	}
 }
 

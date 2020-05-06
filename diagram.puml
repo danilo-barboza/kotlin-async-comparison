@@ -1,0 +1,15 @@
+@startuml
+
+(*)  --> Fetch most recent order
+
+--> ===PARALLEL1_START===
+--> Fetch stock information
+--> ===PARALLEL1_END===
+
+===PARALLEL1_START=== --> Fetch delivery cost
+--> ===PARALLEL1_END===
+
+--> (*)
+
+
+@enduml

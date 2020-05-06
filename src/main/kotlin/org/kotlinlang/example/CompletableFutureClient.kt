@@ -11,25 +11,31 @@ import java.util.concurrent.CompletableFuture
 class CompletableFutureClient {
 	val jdkHttpClient: HttpClient = HttpClient.newHttpClient()
 
-	fun getUserAgent(): CompletableFuture<String> {
+	fun fetchMostRecentOrderId(): CompletableFuture<String> {
 		return jdkHttpClient.sendAsync(
-			HttpRequest.newBuilder(URI.create("https://httpbin.org/user-agent"))
+			HttpRequest.newBuilder(URI.create("https://httpbin.org/uuid"))
 				.GET()
 				.build(), HttpResponse.BodyHandlers.ofString()
-		).thenApply { it.body() }
+		).thenApply { parseUUIDResponse(it.body()) }
 	}
 
-	fun processUserAgent(userAgentResponse: String, name: String): CompletableFuture<String> {
-		val fullName = "jdkHttpClient($name)"
+	fun fetchDeliveryCost(orderId: String): CompletableFuture<String> {
+		return fetchDelayedData(orderId, "Delivery cost")
+	}
+
+	fun fetchStockInformation(orderId: String): CompletableFuture<String> {
+		return fetchDelayedData(orderId, "Stock")
+	}
+
+	private fun fetchDelayedData(orderId: String, operation: String): CompletableFuture<String> {
+		val fullName = "jdkHttpClient($operation)"
 		logDelayedRequest(fullName)
 
 		return jdkHttpClient.sendAsync(
 			HttpRequest.newBuilder(URI.create("https://httpbin.org/delay/1"))
-				.POST(HttpRequest.BodyPublishers.ofString(userAgentResponse))
+				.POST(HttpRequest.BodyPublishers.ofString(delayedOperationRequest(operation, orderId)))
 				.build(), HttpResponse.BodyHandlers.ofString()
-		).thenApply {
-			"$fullName result: ${parseDelayedResponse(it.body())}"
-		}
+		).thenApply { parseDelayedResponse(it.body()) }
 	}
 
 }

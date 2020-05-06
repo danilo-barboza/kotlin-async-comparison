@@ -16,30 +16,37 @@ class SequentialComparisonController(
 ) {
 
 	@GetMapping("/completable-future")
-	fun completableFuture(): CompletableFuture<String> {
+	fun completableFuture(): CompletableFuture<CombinedResult> {
 		logger.info("/sequential/completable-future endpoint called")
-		val userAgentFuture: CompletableFuture<String> = completableFutureClient.getUserAgent()
-		return userAgentFuture
-			.thenCompose { userAgent -> completableFutureClient.processUserAgent(userAgent, "one") }
-			.thenCompose { processedUserAgent -> completableFutureClient.processUserAgent(processedUserAgent, "two") }
+		val orderIdFuture: CompletableFuture<String> = completableFutureClient.fetchMostRecentOrderId()
+		return orderIdFuture
+			.thenCompose { orderId -> completableFutureClient.fetchDeliveryCost(orderId).thenApply { orderId to it } }
+			.thenCompose { (orderId, deliveryCost) ->
+				completableFutureClient.fetchStockInformation(orderId)
+					.thenApply { CombinedResult(deliveryCost, it) }
+			}
 	}
 
 	@GetMapping("/reactor")
-	fun reactor(): Mono<String> {
+	fun reactor(): Mono<CombinedResult> {
 		logger.info("/sequential/reactor endpoint called")
-		val userAgentFuture: Mono<String> = reactorClient.getUserAgent()
-		return userAgentFuture
-			.flatMap { userAgent -> reactorClient.processUserAgent(userAgent, "one") }
-			.flatMap { processedUserAgent -> reactorClient.processUserAgent(processedUserAgent, "two") }
+		val orderIdFuture: Mono<String> = reactorClient.fetchMostRecentOrderId()
+		return orderIdFuture
+			.flatMap { orderId -> reactorClient.fetchDeliveryCost(orderId).map { orderId to it } }
+			.flatMap { (orderId, deliveryCost) ->
+				reactorClient.fetchStockInformation(orderId)
+					.map { CombinedResult(deliveryCost, it) }
+			}
 	}
 
 	@GetMapping("/coroutines")
-	suspend fun coroutines(): String {
+	suspend fun coroutines(): CombinedResult {
 		logger.info("/sequential/coroutines endpoint called")
-		val userAgent = coroutinesClient.getUserAgent()
+		val orderId = coroutinesClient.fetchMostRecentOrderId()
 
-		val processedUserAgent = coroutinesClient.processUserAgent(userAgent, "one")
-		return coroutinesClient.processUserAgent(processedUserAgent, "two")
+		val deliveryCost = coroutinesClient.fetchDeliveryCost(orderId)
+		val stockInformation = coroutinesClient.fetchStockInformation(orderId)
+		return CombinedResult(deliveryCost, stockInformation)
 	}
 
 }
